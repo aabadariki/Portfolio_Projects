@@ -11,7 +11,7 @@ order by 1,2
 
 Select location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
 From PortfolioProject..CovidDeaths
-where location like '%Nigeria'
+where location like 'Nigeria'
 order by 1,2
 
 
