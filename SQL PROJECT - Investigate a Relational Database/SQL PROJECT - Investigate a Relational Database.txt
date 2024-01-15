@@ -1,0 +1,151 @@
+#/*Query 1 - query used for first insight*/
+#Is there a significant diffence in rental performance of the stores?
+
+SELECT
+   DATE_PART('year', r.rental_date) rental_year,
+   TO_CHAR(r.rental_date, 'Month') rental_month,
+   s.store_id,
+   COUNT(r.rental_id) count_rentals 
+FROM
+   store AS s 
+   JOIN
+      staff AS stf 
+      ON s.store_id = stf.store_id 
+   JOIN
+      rental AS r 
+      ON stf.staff_id = r.staff_id 
+GROUP BY
+   1,
+   2,
+   3 
+ORDER BY
+   4 DESC
+
+#/*Query 2 - query used for Second insight*/
+#Which “Family Movie” has the highest rental?
+
+With T1 as 
+(
+   SELECT
+      Initcap(f.title) AS Title,
+      c.name AS Category_name,
+      Count(r.rental_id) AS Rental_count 
+   FROM
+      film AS f 
+      JOIN
+         film_category fc 
+         ON f.film_id = fc.film_id 
+      JOIN
+         category AS c 
+         ON fc.category_id = c.category_id 
+      JOIN
+         inventory AS i 
+         ON i.film_id = f.film_id 
+      JOIN
+         rental AS r 
+         ON i.inventory_id = r.inventory_id 
+   WHERE
+      c.name IN 
+      (
+         'Animation',
+         'Children',
+         'Classics',
+         'Comedy',
+         'Family',
+         'Music' 
+      )
+   GROUP BY
+      1,
+      2 
+   ORDER BY
+      2,
+      1 
+)
+Select
+   Category_name,
+   sum(rental_count) Total_Rental_count 
+From
+   T1 
+Group by
+   1 
+Order by
+   2 Desc
+
+#/*Query 3 - query used for third insight*/
+#Top actors for high-revenue movie rentals?
+
+WITH T1 AS 
+(
+   SELECT
+      a.actor_id,
+      a.first_name,
+      a.last_name,
+      COUNT(DISTINCT r.rental_id) AS movies_rented,
+      SUM(p.amount) AS total_revenue,
+      SUM(p.amount) / COUNT(DISTINCT r.rental_id) AS revenue_per_movie 
+   FROM
+      Actor a 
+      JOIN
+         Film_Actor fa 
+         ON a.actor_id = fa.actor_id 
+      JOIN
+         Film f 
+         ON fa.film_id = f.film_id 
+      LEFT JOIN
+         Inventory i 
+         ON f.film_id = i.film_id 
+      LEFT JOIN
+         Rental r 
+         ON i.inventory_id = r.inventory_id 
+      LEFT JOIN
+         Payment p 
+         ON r.rental_id = p.rental_id 
+   GROUP BY
+      a.actor_id,
+      a.first_name,
+      a.last_name 
+)
+SELECT
+   actor_id,
+   first_name || ' ' || last_name Actor,
+   movies_rented,
+   total_revenue,
+   revenue_per_movie,
+   RANK() OVER (
+ORDER BY
+   revenue_per_movie DESC) AS rank 
+FROM
+   T1 
+ORDER BY
+   6 Limit 10
+
+#/*Query 4 - query used for forth insight*/
+#Who is the better performing staff?
+
+WITH T1 AS 
+(
+   SELECT
+      s.staff_id,
+      s.first_name || ' ' || s.last_name AS staff_name,
+      SUM(p.amount) AS total_revenue,
+      COUNT(DISTINCT p.customer_id) AS customer_count,
+      ROW_NUMBER() OVER (
+   ORDER BY
+      SUM(p.amount) DESC) AS rank 
+   FROM
+      Staff AS s 
+      JOIN
+         Payment p 
+         ON s.staff_id = p.staff_id 
+   GROUP BY
+      1,
+      2 
+)
+SELECT
+   staff_id,
+   staff_name,
+   total_revenue,
+   customer_count,
+   total_revenue / customer_count AS revenue_per_customer 
+FROM
+   T1
