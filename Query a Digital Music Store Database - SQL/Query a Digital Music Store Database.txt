@@ -1,0 +1,43 @@
+#/*Query 1 - the query used for the first insight*/
+#WHO ARE THE COMPANY’S MOST PROFITABLE CUSTOMERS
+
+SELECT (Customer.Firstname || " " || Customer.LastName) AS CustomerName,
+       SUM(Invoice.total) AS total
+FROM Invoice
+INNER JOIN Customer ON Invoice.CustomerId=Customer.CustomerId
+GROUP BY 1
+ORDER BY total DESC
+LIMIT 6;
+
+#/*Query 2 - the query used for the second insight*/
+#NUMBER OF ALBUMS
+
+SELECT Artist.Name AS "Artist Name",
+       COUNT(Album.ArtistId) AS "Number of Albums"
+FROM Album
+JOIN Artist ON album.artistid=artist.ArtistId
+GROUP BY 1
+ORDER BY "Number of ALbums" DESC
+LIMIT 4;
+
+#/*Query 3 - The query used for the third insight*/
+#What Is The Most Available Genre in the Store
+
+SELECT Genre.Name AS "Genre Name",
+       COUNT(Track.trackid) AS "Number of Tracks"
+FROM Track
+JOIN Genre ON Track.genreid=genre.genreid
+GROUP BY 1
+ORDER BY "Number of Tracks" DESC
+LIMIT 4;
+
+#/*Query 4 - The query used for the fouth insight*/
+#Which Employee has supported the most customers
+
+SELECT (Employee.FirstName || " " || Employee.LastName) AS "Employee Name",
+       COUNT (Customer.CustomerID) AS " Number of Customers"
+FROM Employee
+JOIN Customer ON Employee.Employeeid=customer.SupportRepId
+GROUP BY 1
+ORDER BY "Number of Customr"
+LIMIT 4
